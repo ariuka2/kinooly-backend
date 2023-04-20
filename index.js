@@ -3,10 +3,8 @@ const express = require("express");
 require("dotenv").config();
 
 // postgresql сонгосон бол энэ доорх мөрийн uncomment
-// const { createConnection } = require("./src/common/pg");
+const { createConnection } = require("./src/common/pg");
 
-// mongodb сонгосон бол энэ доорх мөрийн uncomment
-// const { createConnection } = require("./src/common/mongo");
 
 var bodyParser = require("body-parser");
 const cors = require("cors");

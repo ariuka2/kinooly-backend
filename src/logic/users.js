@@ -3,14 +3,14 @@ const { calcToken } = require("../common/auth");
 
 const login = async (request, response, pool) => {
   try {
-    const { username, password } = request.body;
+    const { email, password } = request.body;
 
     const result = await pool.query(
-      "SELECT * FROM users WHERE username = $1 and password = $2",
-      [username, password]
+      "SELECT * FROM users WHERE email = $1 and password = $2",
+      [email, password]
     );
 
-    const token = calcToken({ username });
+    const token = calcToken({ email });
 
     return response.status(200).json({
       data: result.rows[0],
@@ -23,9 +23,12 @@ const login = async (request, response, pool) => {
   }
 };
 
+// v
 const getUsers = async (request, response, pool) => {
   try {
-    const result = await pool.query("SELECT * FROM users");
+    const result = await pool.query(
+      "SELECT * FROM users ORDER BY created_date desc"
+    );
     return response.status(200).json({
       data: result.rows,
       token: request.token,
@@ -37,12 +40,13 @@ const getUsers = async (request, response, pool) => {
   }
 };
 
+// v
 const insertUser = async (request, response, pool) => {
   try {
-    const { username, firstname, lastname, password } = request.body;
+    const { password, firstname, lastname, email } = request.body;
     await pool.query(
-      "INSERT INTO users (username, firstname, lastname, password) values ($1, $2, $3, $4)",
-      [username, firstname, lastname, password]
+      "INSERT INTO users (password, firstname,lastname, email) VALUES ($1, $2, $3, $4)",
+      [password, firstname, lastname, email]
     );
     return response.status(200).json({
       message: "success",
@@ -55,12 +59,13 @@ const insertUser = async (request, response, pool) => {
   }
 };
 
+//v
 const updateUser = async (request, response, pool) => {
   try {
-    const { username, firstname, lastname, password, id } = request.body;
+    const { password, firstname, lastname, email, id } = request.body;
     await pool.query(
-      "UPDATE users SET username=$1, firstname=$2, lastname=$3, password=$4 where id = $5",
-      [username, firstname, lastname, password, id]
+      "UPDATE users SET password = COALESCE($1,password), firstname = COALESCE($2, firstname), lastname = COALESCE($3, lastname), email = COALESCE($4, email) WHERE id = $5",
+      [password, firstname, lastname, email, id]
     );
     return response.status(200).json({
       message: "success",
@@ -73,10 +78,13 @@ const updateUser = async (request, response, pool) => {
   }
 };
 
+// v
 const deleteUser = async (request, response, pool) => {
   try {
     const { id } = request.body;
     console.log("id: ", id);
+    await pool.query("DELETE FROM actions WHERE user_id = $1", [id]);
+    await pool.query("DELETE FROM watchlist WHERE user_id = $1", [id]);
     await pool.query("DELETE FROM users WHERE id = $1", [id]);
     return response.status(200).json({
       message: "success",
