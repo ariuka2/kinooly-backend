@@ -42,10 +42,10 @@ const updateAction = async (request, response, pool) => {
   try {
     const { id, liked, movie_id, user_id } = request.body;
     await pool.query("UPDATE actions SET liked = COALESCE($1, liked), movie_id = COALESCE($2, movie_id), user_id = COALESCE($3, user_id) WHERE id = $4", [
-      id,
       liked,
       movie_id, 
-      user_id 
+      user_id,
+      id,
     ]);
     return response.status(200).json({
       message: "success",

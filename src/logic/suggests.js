@@ -41,7 +41,7 @@ const insertSuggest = async (request, response, pool) => {
 const updateSuggest = async (request, response, pool) => {
   try {
     const { id, mood_id, genre_id } = request.body;
-    await pool.query("UPDATE suggest SET mood_id = COALESCE($1, mood_id), genre_id = COALESCE($2, genre_id) WHERE id = $3", [id,  mood_id, genre_id]);
+    await pool.query("UPDATE suggest SET mood_id = COALESCE($1, mood_id), genre_id = COALESCE($2, genre_id) WHERE id = $3", [ mood_id, genre_id, id]);
     return response.status(200).json({
       message: "success",
       token: request.token,

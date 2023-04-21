@@ -41,7 +41,7 @@ const updateWatchlist = async (request, response, pool) => {
     const { id, movie_id, user_id } = request.body;
     await pool.query(
       "UPDATE watchlist SET movie_id = COALESCE($1, movie_id), user_id = COALESCE($2, user_id) WHERE id = $3",
-      [id, movie_id, user_id]
+      [ movie_id, user_id, id]
     );
     return response.status(200).json({
       message: "success",
