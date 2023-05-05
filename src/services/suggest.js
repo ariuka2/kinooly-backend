@@ -9,7 +9,6 @@ const {
   deleteSuggest,
 } = require("../logic/suggests");
 
-
 module.exports = function (app, connection) {
   /**
    * GET - Жагсаалт авах, ямар нэг дата харахад ашиглана => app.get()

@@ -1,17 +1,51 @@
 // eniig shalgah heregtei
 const { logger } = require("../common/log");
-const { calcToken } = require("../common/auth");
+
+var natural = require("natural");
+const req = require("express/lib/request");
 
 //v
 const getSuggests = async (request, response, pool) => {
   try {
-    const result = await pool.query(
-      "SELECT * FROM suggest ORDER BY created_date desc"
+    const { moods } = request.body;
+
+    if (!moods) {
+      response.status(400).json({ error: "moods not found!" });
+    }
+
+    console.log(moods);
+
+    let genres = [];
+    natural.BayesClassifier.load(
+      "./src/model/movie_model.json",
+      null,
+      async function (err, model) {
+        for (let i = 0; i < moods.length; i++) {
+          let a = model.classify(moods[i]);
+          genres = [...genres, ...a.split(",")];
+        }
+
+        const genrelist = await pool.query(
+          `SELECT * FROM genres WHERE name IN (${genres
+            .map((_, i) => "$" + (i + 1))
+            .join(", ")})`,
+          genres
+        );
+
+        const movies = await pool.query(
+          `SELECT * FROM movies WHERE genre_id IN (${genrelist.rows
+            .map((_, i) => "$" + (i + 1))
+            .join(", ")})`,
+          genrelist.rows.map((row) => row.id)
+        );
+
+        genrelist;
+        return response.status(200).json({
+          data: movies.rows,
+          token: request.token,
+        });
+      }
     );
-    return response.status(200).json({
-      data: result.rows,
-      token: request.token,
-    });
   } catch (error) {
     response.status(500).send({ error: error.message });
     logger.error(`${request.ip} ${error.message}`);
@@ -41,7 +75,10 @@ const insertSuggest = async (request, response, pool) => {
 const updateSuggest = async (request, response, pool) => {
   try {
     const { id, mood_id, genre_id } = request.body;
-    await pool.query("UPDATE suggest SET mood_id = COALESCE($1, mood_id), genre_id = COALESCE($2, genre_id) WHERE id = $3", [ mood_id, genre_id, id]);
+    await pool.query(
+      "UPDATE suggest SET mood_id = COALESCE($1, mood_id), genre_id = COALESCE($2, genre_id) WHERE id = $3",
+      [mood_id, genre_id, id]
+    );
     return response.status(200).json({
       message: "success",
       token: request.token,
