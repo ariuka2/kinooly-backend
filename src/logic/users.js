@@ -10,6 +10,11 @@ const login = async (request, response, pool) => {
       [email, password]
     );
 
+    if (result.rows.length == 0) {
+      return response
+        .status(401)
+        .json({ error: "username or password is incorrect!" });
+    }
     const token = calcToken({ email });
 
     return response.status(200).json({
